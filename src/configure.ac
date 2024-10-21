@@ -1,4 +1,4 @@
-AC_INIT(calostatusmapper,[1.00])
+AC_INIT(beambackgroundfilterandqa,[1.00])
 AC_CONFIG_SRCDIR([configure.ac])
 
 AM_INIT_AUTOMAKE

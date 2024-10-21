@@ -1,19 +1,20 @@
-///  --------------------------------------------------------------------------
-/*! \file   CaloStatusMapperLinkDef.h
- *  \author Derek Anderson
- *  \date   05.22.2024
+/// ===========================================================================
+/*! \file    BeamBackgroundFilterAndQALinkDef.h
+ *  \authors Hanpu Jiang, Derek Anderson
+ *  \date    10.21.2024
  *
- *  A Fun4All QA module to plot no. of towers per event
- *  and vs. eta, phi as a function of status.
+ *  A F4A module to filter out events with significant
+ *  beam background (the so-called "streaky events")
+ *  and produce some relevant QA histograms.
  */
-///  --------------------------------------------------------------------------
+/// ===========================================================================
 
 #pragma once
 
 #ifdef __CINT__
 
-#pragma link C++ class CaloStatusMapper
+#pragma link C++ class BeamBackgroundFilterAndQA
 
 #endif  // end if __CINT__
 
-// end ------------------------------------------------------------------------
+// end ========================================================================
