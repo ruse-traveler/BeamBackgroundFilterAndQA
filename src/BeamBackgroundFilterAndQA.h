@@ -14,6 +14,8 @@
 
 // c++ utilities
 #include <string>
+// f4a libraries
+#include <fun4all/SubsysReco.h>
 /* TODO others will go here... */
 
 // forward declarations

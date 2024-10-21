@@ -47,9 +47,6 @@ BeamBackgroundFilterAndQA::BeamBackgroundFilterAndQA(const std::string &name) : 
     std::cout << "BeamBackgroundFilterAndQA::BeamBackgroundFilterAndQA(const std::string &name) Calling ctor" << std::endl;
   }
 
-  // make sure node vector is empty
-  m_inNodes.clear();
-
 }  // end ctor
 
 
