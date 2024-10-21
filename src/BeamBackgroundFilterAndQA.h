@@ -14,6 +14,7 @@
 
 // c++ utilities
 #include <string>
+#include <vector>
 // f4a libraries
 #include <fun4all/SubsysReco.h>
 /* TODO others will go here... */
@@ -21,7 +22,11 @@
 // forward declarations
 class PHCompositeNode;
 class QAHistManagerHistDef;
+class TowerInfoContainer;
 /* TODO add any others here... */
+
+// aliases for convenience
+using TwrVec2D = std::vector<std::vector<TowerInfo*>>;
 
 
 
@@ -33,11 +38,14 @@ struct BeamBackgroundFilterAndQAConfig {
   // turn debug on/off
   bool debug = true;
 
-  // input node
-  std::string inNodeName = "";
-
-  // module name
+  // input node & module name
+  std::string inNodeName = "TOWERINFO_CALIB_HCALOUT";
   std::string moduleName = "BeamBackgroundFilterAndQA";
+
+  // ohcal streak algorithm parameters
+  float    minStreakTwrEne    = 0.6;
+  float    maxAdjacentTwrEne  = 0.06;
+  uint32_t minNumTwrsInStreak = 5;
 
 };
 
@@ -73,6 +81,8 @@ class BeamBackgroundFilterAndQA : public SubsysReco {
   private:
 
     // private methods
+    bool HasStreakInOHCal();
+    void BuildTowerArray();
     void InitHistManager();
     void BuildHistograms();
     void GrabNodes(PHCompositeNode* topNode);
@@ -80,8 +90,12 @@ class BeamBackgroundFilterAndQA : public SubsysReco {
     // module configuration
     BeamBackgroundFilterAndQAConfig m_config;
 
+    // tower info eta, phi map
+    TwrVec2D m_ohTwrArray;
+
     // f4a members
-    Fun4AllHistoManager* m_manager = NULL;
+    Fun4AllHistoManager* m_manager     = NULL;
+    TowerInfoContainer*  m_ohcalTowers = NULL;
 
     /* TODO add histograms */
 
