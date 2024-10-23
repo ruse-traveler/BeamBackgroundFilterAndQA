@@ -16,7 +16,6 @@
 #include <cassert>
 #include <iostream>
 // calo base
-#include <calobase/TowerInfo.h>
 #include <calobase/TowerInfoContainer.h>
 // f4a libraries
 #include <fun4all/Fun4AllReturnCodes.h>
@@ -94,24 +93,6 @@ int BeamBackgroundFilterAndQA::Init(PHCompositeNode* topNode)
 
 
 // ----------------------------------------------------------------------------
-//! Get ready for a new run
-// ----------------------------------------------------------------------------
-int BeamBackgroundFilterAndQA::InitRun(PHCompositeNode* topNode)
-{
-
-  if (m_config.debug)
-  {
-    std::cout << "BeamBackgroundFilterAndQA::InitRun(PHCompositeNode *topNode) Preparing for new run" << std::endl;
-  }
-
-  /* TODO fill in */
-  return Fun4AllReturnCodes::EVENT_OK;
-
-}  // end 'Init(PHCompositeNode*)'
-
-
-
-// ----------------------------------------------------------------------------
 //! Grab inputs, check for beam background, and fill histograms
 // ----------------------------------------------------------------------------
 int BeamBackgroundFilterAndQA::process_event(PHCompositeNode* topNode)
@@ -119,15 +100,16 @@ int BeamBackgroundFilterAndQA::process_event(PHCompositeNode* topNode)
 
   if (m_config.debug)
   {
-    std::cout << "BeamBackgroundFilterAndQA::process_event(PHCompositeNode *topNode) Processing Event" << std::endl;
+    std::cout << "BeamBackgroundFilterAndQA::process_event(PHCompositeNode *topNode) Processing event" << std::endl;
   }
 
   // grab input nodes & build array of ohcal towers
   GrabNodes(topNode);
+  ResetTowerArrays();
   BuildTowerArray();
 
   // check for beam background
-  const bool hasBeamBkgd = HasStreakInOHCal;
+  const bool hasBeamBkgd = HasStreakInOHCal();
 
   if (hasBeamBkgd)
   {
@@ -150,7 +132,7 @@ int BeamBackgroundFilterAndQA::End(PHCompositeNode *topNode)
 
   if (m_config.debug)
   {
-    std::cout << "BeamBackgroundFilterAndQA::End(PHCompositeNode *topNode) This is the End..." << std::endl;
+    std::cout << "BeamBackgroundFilterAndQA::End(PHCompositeNode *topNode) This is the end..." << std::endl;
   }
 
   /* nothing to do */
@@ -174,55 +156,111 @@ bool BeamBackgroundFilterAndQA::HasStreakInOHCal()
     std::cout << "BeamBackgroundFilterAndQA::HasStreakInOHCal() Checking if streak found in OHCal" << std::endl;
   }
 
-  // loop over OHCal towers
-  for (uint32_t iTwr = 0; iTwr < m_ohcalTowers -> size(); ++iTwr)
+  // lambdas to get phi +- 1 neighbors
+  auto getAdjacentUp   = [this](const std::size_t phi) {return (phi + 1) % m_ohTwrArray.front().size();};
+  auto getAdjacentDown = [this](const std::size_t phi) {return (phi == 0) ? m_ohTwrArray.front().size() : (phi - 1);};
+
+  // loop over tower (eta, phi) map to find streaks
+  for (std::size_t iPhi = 0; iPhi < m_ohTwrArray.front().size(); ++iPhi)
   {
+    for (std::size_t iEta = 0; iEta < m_ohTwrArray.size(); ++iEta)
+    {
 
+      // check if tower is a candidate for being in a streak
+      const bool isNotStreak = IsTowerNotStreaky(m_ohTwrArray[iEta][iPhi]);
+      if (isNotStreak) continue;
 
-    /* MORE REFERENCE
-    // grab eta, phi indices
-    const int32_t key  = m_ohcalTowers -> encode_key(iTwr);
-    const int32_t iEta = m_ohcalTowers -> getTowerEtaBin(key);
-    const int32_t iPhi = m_ohcalTowers -> getTowerPhiBin(key);
+      // grab adjacent towers
+      const std::size_t iUp   = getAdjacentUp(iPhi);
+      const std::size_t iDown = getAdjacentDown(iPhi);
 
-    // HANDY REFERENCEs
-    const double energy = m_ohcalTowers    
-        TowerInfo* tower = towers -> get_tower_at_channel(channel);
+      // and check if adjacent towers consistent w/ a streak
+      const bool isUpNotStreak   = IsNeighborNotStreaky(m_ohTwrArray[iEta][iUp]);
+      const bool isDownNotStreak = IsNeighborNotStreaky(m_ohTwrArray[iEta][iDown]);
+      if (isUpNotStreak || isDownNotStreak) continue;
 
-    */
+      // finally, increment no. of streaky towers for this phi
+      ++m_ohNumStreak[iPhi];
 
-  }  // end OCHal tower loop
+    }  // end eta loop
+  }  // end phi loop
 
-  /* reference
-  float cut_abrupt_target_check = 0.6;
-  float cut_abrupt_surround_check = 0.06;
-  int cut_threshold = 5;
-  int doublephi_ntower_isabrupt[n_hcal_phibin] = {0};
-  int up, bottom;
-  for (int iphi = 0; iphi < n_hcal_phibin; ++iphi) {
-    for (int ieta = 0; ieta < n_hcal_etabin; ++ieta) {
-      if (ohcal_tower_status[ieta][iphi] != 0 || ohcal_tower_e[ieta][iphi] < cut_abrupt_target_check) continue;
-      up = get_hcal_up(iphi);
-      bottom = get_hcal_bottom(iphi);
-      if (ohcal_tower_status[ieta][up] != 0 || ohcal_tower_status[ieta][bottom] != 0) continue;
-      if (ohcal_tower_e[ieta][up] > cut_abrupt_surround_check || ohcal_tower_e[ieta][bottom] > cut_abrupt_surround_check) continue;
-      doublephi_ntower_isabrupt[iphi]++;
-      doublephi_ntower_isabrupt[up]++;
-    }
-  }
-  int max_abrupt = 0;
-  for (int iphi = 0; iphi < n_hcal_phibin; ++iphi) {
-    if (doublephi_ntower_isabrupt[iphi] > max_abrupt) {
-      max_abrupt = doublephi_ntower_isabrupt[iphi];
-    }
-  }
-  h_record->Fill(max_abrupt);
-  return max_abrupt >= cut_threshold;
-*/
+  // now find longest streak
+  const uint32_t nMaxStreak = *std::max_element(m_ohNumStreak.begin(), m_ohNumStreak.end());
 
-  return true;
+  // return if streak length above threshold
+  return (nMaxStreak > m_config.minNumTwrsInStreak);
 
 }  // end 'HasStreakInOHCal()'
+
+
+
+// ----------------------------------------------------------------------------
+//! Check if tower not consistent w/ being in a streak
+// ----------------------------------------------------------------------------
+bool BeamBackgroundFilterAndQA::IsTowerNotStreaky(const Tower& tower)
+{
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 1))
+  {
+    std::cout << "BeamBackgroundFilterAndQA::IsTowerNotStreaky() Checking if tower not consistent w/ streak" << std::endl;
+  }
+
+  const bool isBadStatus   = (tower.status != 0);
+  const bool isBelowEneCut = (tower.energy < m_config.minStreakTwrEne);
+  return (isBadStatus || isBelowEneCut);
+
+}  // end 'IsTowerNotStreaky(Tower& tower)'
+
+
+
+// ----------------------------------------------------------------------------
+//! Check if a neighboring tower consistent w/ a streak
+// ----------------------------------------------------------------------------
+bool BeamBackgroundFilterAndQA::IsNeighborNotStreaky(const Tower& tower)
+{
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 1))
+  {
+    std::cout << "BeamBackgroundFilterAndQA::IsNeighborNotStreaky() Checking if neighboring tower not consistent w/ streak" << std::endl;
+  }
+
+  const bool isBadStatus   = (tower.status != 0);
+  const bool isAboveEneCut = (tower.energy > m_config.maxAdjacentTwrEne);
+  return (isBadStatus || isAboveEneCut);
+
+}  // end 'IsNeighborNotStreaky(Tower& tower)'
+
+
+
+// ----------------------------------------------------------------------------
+//! Reset tower array
+// ----------------------------------------------------------------------------
+void BeamBackgroundFilterAndQA::ResetTowerArrays()
+{
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 0))
+  {
+    std::cout << "BeamBackgroundFilterAndQA::ResetArrays() Resestting OHCal tower arrays" << std::endl;
+  }
+
+  // reset (eta, phi) map
+  for (auto row : m_ohTwrArray)
+  {
+    for (auto tower : row)
+    {
+      tower.Reset();
+    }
+  }
+
+  // reset number of streaky towers array
+  std::fill(m_ohNumStreak.begin(), m_ohNumStreak.end(), 0);
+  return;
+
+}  // end 'ResetTowerArrays()'
 
 
 
@@ -238,19 +276,42 @@ void BeamBackgroundFilterAndQA::BuildTowerArray()
     std::cout << "BeamBackgroundFilterAndQA::BuildTowerArray() Building array of OHCal towers" << std::endl;
   }
 
-  // make sure array is empty
-  m_ohTwrArray.clear();
-
   // loop over OHCal towers
-  for (uint32_t iTwr = 0; iTwr < m_ohcalTowers -> size(); ++iTwr)
+  for (std::size_t iTower = 0; iTower < m_ohcalTowers -> size(); ++iTower)
   {
 
-    // TODO fill in
-    TowerInfo* tower = towers -> get_tower_at_channel(channel);
+    // get indices
+    const int32_t key  = m_ohcalTowers->encode_key(iTower);
+    const int32_t iEta = m_ohcalTowers->getTowerEtaBin(key);
+    const int32_t iPhi = m_ohcalTowers->getTowerPhiBin(key);
+
+    // grab tower & set info
+    TowerInfo* info = m_ohcalTowers->get_tower_at_channel(iTower);
+    m_ohTwrArray[iEta][iPhi].SetInfo(info);
 
   }  // end tower loop
+  return;
 
 }  // end 'BuildTowerArray()'
+
+
+
+// ----------------------------------------------------------------------------
+//! Build histograms
+// ----------------------------------------------------------------------------
+void BeamBackgroundFilterAndQA::BuildHistograms()
+{
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 0))
+  {
+    std::cout << "BeamBackgroundFilterAndQA::BuildHistograms() Creating histograms" << std::endl;
+  }
+
+  /* TODO fill in */
+  return;
+
+}  // end 'BuildHistograms()'
 
 
 
@@ -275,25 +336,6 @@ void BeamBackgroundFilterAndQA::InitHistManager()
   return;
 
 }  // end 'InitHistManager()'
-
-
-
-// ----------------------------------------------------------------------------
-//! Build histograms
-// ----------------------------------------------------------------------------
-void BeamBackgroundFilterAndQA::BuildHistograms()
-{
-
-  // print debug message
-  if (m_config.debug && (Verbosity() > 0))
-  {
-    std::cout << "BeamBackgroundFilterAndQA::BuildHistograms() Creating histograms" << std::endl;
-  }
-
-  /* TODO fill in */
-  return;
-
-}  // end 'BuildHistograms()'
 
 
 
