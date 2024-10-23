@@ -11,52 +11,52 @@
 
 // c++ utilities
 #include <string>
-// ffa modules
-#include <ffamodules/FlagHandler.h>
-#include <ffamodules/CDBInterface.h>
-// fun4all libraries
-#include <fun4all/SubsysReco.h>
-#include <fun4all/Fun4AllServer.h>
-#include <fun4all/Fun4AllInputManager.h>
-#include <fun4all/Fun4AllDstInputManager.h>
-// phool utilities
-#include <phool/recoConsts.h>
-// qa utils
-#include <qautils/QAHistManagerDef.h>
-// module definitions
-#include <calostatusmapper/BeamBackgroundFilterAndQA.h>
 
+// f4a libraries
+#include <beambackgroundfilterandqa/BeamBackgroundFilterAndQA.h>
+#include <ffamodules/CDBInterface.h>
+#include <ffamodules/FlagHandler.h>
+#include <FROG.h>
+#include <fun4all/Fun4AllDstInputManager.h>
+#include <fun4all/Fun4AllInputManager.h>
+#include <fun4all/Fun4AllServer.h>
+#include <fun4all/SubsysReco.h>
+#include <phool/recoConsts.h>
+#include <qautils/QAHistManagerDef.h>
+
+R__LOAD_LIBRARY(libbeambackgroundfilterandqa.so)
 R__LOAD_LIBRARY(libcalo_io.so)
 R__LOAD_LIBRARY(libfun4all.so)
 R__LOAD_LIBRARY(libfun4allraw.so)
-R__LOAD_LIBRARY(libcalostatusmapper.so)
 
 
 
 // macro body =================================================================
 
 void Fun4All_TestBeamBackgroundFilterAndQA(
-  const int runnumber = 43273,
+  const int runnumber = 47152,
   const int nEvents = 10,
   const int verbosity = 5,
-  const std::string inFile = "/sphenix/lustre01/sphnxpro/commissioning/slurp/caloy2test/run_00042000_00042100/DST_CALO_run2pp_new_2024p001-00042072-0121.root",
+  const std::string inFile = "DST_CALO_run2pp_ana437_2024p007-00047152-00160.root",
   const std::string outFile = "test_bbfaq.root"
 ) {
 
   // options ------------------------------------------------------------------
 
   // trigger cluster maker options
-  BeamBackgroundFilterAndQAConfig cfg_filter {
+  BeamBackgroundFilterAndQA::Config cfg_filter {
     .debug = true
   };
 
   // initialize f4a -----------------------------------------------------------
 
-  Fun4AllServer* f4a = Fun4AllServer::instance();
-  CDBInterface*  cdb = CDBInterface::instance();
-  recoConsts*    rc  = recoConsts::instance();
-  f4a -> Verbosity(verbosity);
-  cdb -> Verbosity(verbosity);
+  FROG*          frog = new FROG();
+  Fun4AllServer* f4a  = Fun4AllServer::instance();
+  CDBInterface*  cdb  = CDBInterface::instance();
+  recoConsts*    rc   = recoConsts::instance();
+  frog -> Verbosity(verbosity);
+  f4a  -> Verbosity(verbosity);
+  cdb  -> Verbosity(verbosity);
 
   // grab lookup tables
   rc -> set_StringFlag("CDB_GLOBALTAG", "ProdA_2024");

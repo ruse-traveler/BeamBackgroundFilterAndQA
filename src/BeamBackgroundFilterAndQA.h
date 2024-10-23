@@ -21,6 +21,7 @@
 #include <calobase/TowerInfo.h>
 
 // forward declarations
+class Fun4AllHistoManager;
 class PHCompositeNode;
 class QAHistManagerHistDef;
 class TowerInfoContainer;
