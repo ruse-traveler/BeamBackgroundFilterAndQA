@@ -1,4 +1,5 @@
 ref/
+todo/
 src/*
 !src/*.cc
 !src/*.h
