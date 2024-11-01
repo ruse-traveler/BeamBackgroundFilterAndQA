@@ -14,6 +14,7 @@ AM_CPPFLAGS = \
   -I$(ROOTSYS)/include
 
 pkginclude_HEADERS = \
+  BaseBeamBackgroundFilter.h \
   BeamBackgroundFilterAndQA.h
 
 if ! MAKEROOT6
