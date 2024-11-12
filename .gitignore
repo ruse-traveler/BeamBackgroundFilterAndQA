@@ -1,5 +1,6 @@
 ref/
 todo/
+output/
 src/*
 !src/*.cc
 !src/*.h
