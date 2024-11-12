@@ -44,7 +44,7 @@ void Fun4All_TestBeamBackgroundFilterAndQA(
   // options ------------------------------------------------------------------
 
   // trigger cluster maker options
-  BeamBackgroundFilterAndQA::Config cfg_filter {
+  BeamBackgroundFilterAndQAConfig cfg_filter {
     .debug = true
   };
 

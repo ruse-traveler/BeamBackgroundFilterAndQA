@@ -12,7 +12,14 @@
 #ifndef BEAMBACKGROUNDFILTERANDQADEFS_H
 #define BEAMBACKGROUNDFILTERANDQADEFS_H
 
+// calo base
+#include <calobase/TowerInfo.h>
 
+
+
+// ============================================================================
+//! Misc beam background filter and QA definitions
+// ============================================================================
 namespace BeamBackgroundFilterAndQADefs {
 
   // ==========================================================================

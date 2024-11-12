@@ -14,9 +14,10 @@ AM_CPPFLAGS = \
   -I$(ROOTSYS)/include
 
 pkginclude_HEADERS = \
-  BaseBeamBackgroundFilter.h \
+  BeamBackgroundFilterAndQA.h \
   BeamBackgroundFilterAndQADefs.h \
-  BeamBackgroundFilterAndQA.h
+  BaseBeamBackgroundFilter.h \
+  StreakSidebandFilter.h
 
 if ! MAKEROOT6
   ROOT5_DICTS = \
@@ -25,7 +26,8 @@ endif
 
 libbeambackgroundfilterandqa_la_SOURCES = \
   $(ROOT5_DICTS) \
-  BeamBackgroundFilterAndQA.cc
+  BeamBackgroundFilterAndQA.cc \
+  StreakSidebandFilter.cc
 
 libbeambackgroundfilterandqa_la_LDFLAGS = \
   -L$(libdir) \

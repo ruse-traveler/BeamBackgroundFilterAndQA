@@ -25,7 +25,12 @@ class PHCompositeNode;
 //! Abstract base filter 
 // ============================================================================
 /*! An abstract template for filters to be applied in the
- * BeamBackgroundFilterAndQA module
+ *  BeamBackgroundFilterAndQA module. Defines all the
+ *  machinery common between filters.
+ *
+ *  Derived filters need to define the following by
+ *  overwriting the appropriate method:
+ *    - <METHOD 1>
  */
 template <typename Config> class BaseBeamBackgroundFilter
 {
@@ -58,7 +63,7 @@ template <typename Config> class BaseBeamBackgroundFilter
     // ------------------------------------------------------------------------
     /*! This <DOES THE THING>
      */ 
-    virtual void ApplyFilter(PHCompositeNode* topNode) = 0;
+    virtual bool ApplyFilter(PHCompositeNode* topNode) = 0;
 
     /* TODO add method to register histograms */
 
