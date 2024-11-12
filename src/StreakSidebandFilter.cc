@@ -72,23 +72,28 @@ bool StreakSidebandFilter::ApplyFilter(PHCompositeNode* topNode)
     std::cout << "StreakSidebandFilter::ApplyFilter() Checking if streak found in OHCal via their sidebands" << std::endl;
   }
 
-  // grab input nodes & build array of ohcal towers
+  // grab input node
   GrabNodes(topNode);
-  ResetTowerArrays();
-  BuildTowerArray();
+
+  // build tower map
+  m_ohMap.Reset();
+  m_ohMap.Build( m_ohContainer );
+
+  // reset number of streaky towers per eta bin
+  std::fill(m_ohNumStreak.begin(), m_ohNumStreak.end(), 0);
 
   // lambdas to get phi +- 1 neighbors
-  auto getAdjacentUp   = [this](const std::size_t phi) {return (phi + 1) % m_ohTwrArray.front().size();};
-  auto getAdjacentDown = [this](const std::size_t phi) {return (phi == 0) ? m_ohTwrArray.front().size() : (phi - 1);};
+  auto getAdjacentUp   = [this](const std::size_t phi) {return (phi + 1) % m_ohMap.towers.front().size();};
+  auto getAdjacentDown = [this](const std::size_t phi) {return (phi == 0) ? m_ohMap.towers.front().size() : (phi - 1);};
 
   // loop over tower (eta, phi) map to find streaks
-  for (std::size_t iPhi = 0; iPhi < m_ohTwrArray.front().size(); ++iPhi)
+  for (std::size_t iPhi = 0; iPhi < m_ohMap.towers.front().size(); ++iPhi)
   {
-    for (std::size_t iEta = 0; iEta < m_ohTwrArray.size(); ++iEta)
+    for (std::size_t iEta = 0; iEta < m_ohMap.towers.size(); ++iEta)
     {
 
       // check if tower is a candidate for being in a streak
-      const bool isNotStreak = IsTowerNotStreaky(m_ohTwrArray[iEta][iPhi]);
+      const bool isNotStreak = IsTowerNotStreaky(m_ohMap.towers[iEta][iPhi]);
       if (isNotStreak) continue;
 
       // grab adjacent towers
@@ -96,8 +101,8 @@ bool StreakSidebandFilter::ApplyFilter(PHCompositeNode* topNode)
       const std::size_t iDown = getAdjacentDown(iPhi);
 
       // and check if adjacent towers consistent w/ a streak
-      const bool isUpNotStreak   = IsNeighborNotStreaky(m_ohTwrArray[iEta][iUp]);
-      const bool isDownNotStreak = IsNeighborNotStreaky(m_ohTwrArray[iEta][iDown]);
+      const bool isUpNotStreak   = IsNeighborNotStreaky(m_ohMap.towers[iEta][iUp]);
+      const bool isDownNotStreak = IsNeighborNotStreaky(m_ohMap.towers[iEta][iDown]);
       if (isUpNotStreak || isDownNotStreak) continue;
 
       // finally, increment no. of streaky towers for this phi
@@ -130,7 +135,7 @@ void StreakSidebandFilter::GrabNodes(PHCompositeNode* topNode)
     std::cout << "StreakSidebandFilter::GrabNodes(PHCompositeNode*) Grabbing input nodes" << std::endl;
   }
 
-  m_ohcalTowers = findNode::getClass<TowerInfoContainer>(topNode, m_config.inNodeName);
+  m_ohContainer = findNode::getClass<TowerInfoContainer>(topNode, m_config.inNodeName);
   return;
 
 }  // end 'GrabNodes(PHCompositeNode*)'
@@ -142,7 +147,7 @@ void StreakSidebandFilter::GrabNodes(PHCompositeNode* topNode)
 // ----------------------------------------------------------------------------
 //! Check if tower not consistent w/ being in a streak
 // ----------------------------------------------------------------------------
-bool StreakSidebandFilter::IsTowerNotStreaky(const BBFQD::Tower& tower)
+bool StreakSidebandFilter::IsTowerNotStreaky(const bbfqd::Tower& tower)
 {
 
   // print debug message
@@ -162,7 +167,7 @@ bool StreakSidebandFilter::IsTowerNotStreaky(const BBFQD::Tower& tower)
 // ----------------------------------------------------------------------------
 //! Check if a neighboring tower consistent w/ a streak
 // ----------------------------------------------------------------------------
-bool StreakSidebandFilter::IsNeighborNotStreaky(const BBFQD::Tower& tower)
+bool StreakSidebandFilter::IsNeighborNotStreaky(const bbfqd::Tower& tower)
 {
 
   // print debug message
@@ -176,60 +181,5 @@ bool StreakSidebandFilter::IsNeighborNotStreaky(const BBFQD::Tower& tower)
   return (isBadStatus || isAboveEneCut);
 
 }  // end 'IsNeighborNotStreaky(Tower& tower)'
-
-
-
-// ----------------------------------------------------------------------------
-//! Build tower array
-// ----------------------------------------------------------------------------
-void StreakSidebandFilter::BuildTowerArray()
-{
-
-  // loop over OHCal towers
-  for (std::size_t iTower = 0; iTower < m_ohcalTowers -> size(); ++iTower)
-  {
-
-    // get indices
-    const int32_t key  = m_ohcalTowers->encode_key(iTower);
-    const int32_t iEta = m_ohcalTowers->getTowerEtaBin(key);
-    const int32_t iPhi = m_ohcalTowers->getTowerPhiBin(key);
-
-    // grab tower & set info
-    TowerInfo* info = m_ohcalTowers->get_tower_at_channel(iTower);
-    m_ohTwrArray[iEta][iPhi].SetInfo(info);
-
-  }  // end tower loop
-  return;
-
-}  // end 'BuildTowerArray()'
-
-
-
-// ----------------------------------------------------------------------------
-//! Reset tower array
-// ----------------------------------------------------------------------------
-void StreakSidebandFilter::ResetTowerArrays()
-{
-
-  // print debug message
-  if (m_config.debug && (m_config.verbosity > 1))
-  {
-    std::cout << "StreakSidebandFilter::ResetArrays() Resestting OHCal tower arrays" << std::endl;
-  }
-
-  // reset (eta, phi) map
-  for (auto row : m_ohTwrArray)
-  {
-    for (auto tower : row)
-    {
-      tower.Reset();
-    }
-  }
-
-  // reset number of streaky towers array
-  std::fill(m_ohNumStreak.begin(), m_ohNumStreak.end(), 0);
-  return;
-
-}  // end 'ResetTowerArrays()'
 
 // end ========================================================================

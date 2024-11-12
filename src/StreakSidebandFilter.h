@@ -25,7 +25,7 @@ class PHCompositeNode;
 class TowerInfoContainer;
 
 // alias for convenience
-namespace BBFQD = BeamBackgroundFilterAndQADefs;
+namespace bbfqd = BeamBackgroundFilterAndQADefs;
 
 
 
@@ -53,7 +53,8 @@ struct StreakSidebandFilterConfig
  *  in the OHCal by comparing streak candidates vs.
  *  their sidebands, i.e. adjacent phi slices.
  */
-class StreakSidebandFilter : public BaseBeamBackgroundFilter<StreakSidebandFilterConfig> {
+class StreakSidebandFilter : public BaseBeamBackgroundFilter<StreakSidebandFilterConfig>
+{
 
   public:
 
@@ -69,19 +70,17 @@ class StreakSidebandFilter : public BaseBeamBackgroundFilter<StreakSidebandFilte
     // inherited methods
     void GrabNodes(PHCompositeNode* topNode) override;
 
-    // filter-specific method 
-    void ResetTowerArrays();
-    void BuildTowerArray();
-    bool IsTowerNotStreaky(const BBFQD::Tower& tower);
-    bool IsNeighborNotStreaky(const BBFQD::Tower& tower);
+    // filter-specific methods
+    bool IsTowerNotStreaky(const bbfqd::Tower& tower);
+    bool IsNeighborNotStreaky(const bbfqd::Tower& tower);
 
     // input nodes
-    TowerInfoContainer* m_ohcalTowers;
+    TowerInfoContainer* m_ohContainer;
 
     // tower info (eta, phi) map
-    //   - n.b. reminder that there are 64 hcal towers in phi
-    //     and 24 hcal towers in eta
-    std::array<std::array<BBFQD::Tower, 64>, 24> m_ohTwrArray;
+    bbfqd::OHCalMap m_ohMap;
+
+    // no. of streaks per event in ohcal
     std::array<std::size_t, 64> m_ohNumStreak;
 
 };  // end StreakSidebandFilter
