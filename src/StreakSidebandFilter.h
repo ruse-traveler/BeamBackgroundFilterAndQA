@@ -30,40 +30,38 @@ namespace bbfqd = BeamBackgroundFilterAndQADefs;
 
 
 // ============================================================================
-//! User options for filter
-// ============================================================================
-struct StreakSidebandFilterConfig
-{
-
-  bool        debug              = true;
-  float       minStreakTwrEne    = 0.6;
-  float       maxAdjacentTwrEne  = 0.06;
-  uint32_t    minNumTwrsInStreak = 5;
-  uint32_t    verbosity          = 0;
-  std::string inNodeName         = "TOWERINFO_CALIB_HCALOUT";
-
-};  // end StreakSidebandFilterConfig
-
-
-
-// ============================================================================
 //! Identify streaks via sidebands 
 // ============================================================================
 /*! A beam background filter which identifies streaks
  *  in the OHCal by comparing streak candidates vs.
  *  their sidebands, i.e. adjacent phi slices.
  */
-class StreakSidebandFilter : public BaseBeamBackgroundFilter<StreakSidebandFilterConfig>
+class StreakSidebandFilter : public BaseBeamBackgroundFilter
 {
 
   public:
 
+    // ========================================================================
+    //! User options for filter
+    // ========================================================================
+    struct Config
+    {
+      int         verbosity          = 0;
+      bool        debug              = true;
+      float       minStreakTwrEne    = 0.6;
+      float       maxAdjacentTwrEne  = 0.06;
+      uint32_t    minNumTwrsInStreak = 5;
+      std::string inNodeName         = "TOWERINFO_CALIB_HCALOUT";
+    };
+
+    // ctor/dtor
     StreakSidebandFilter();
+    StreakSidebandFilter(Config& cfg);
     ~StreakSidebandFilter();
 
     // inherited methods
-    void BuildHistograms(const std::string& tag = "") override;
     bool ApplyFilter(PHCompositeNode* topNode) override;
+    void BuildHistograms(const std::string& tag = "") override;
 
   private:
 
@@ -74,14 +72,17 @@ class StreakSidebandFilter : public BaseBeamBackgroundFilter<StreakSidebandFilte
     bool IsTowerNotStreaky(const bbfqd::Tower& tower);
     bool IsNeighborNotStreaky(const bbfqd::Tower& tower);
 
-    // input nodes
+    ///! input node
     TowerInfoContainer* m_ohContainer;
 
-    // tower info (eta, phi) map
+    ///! no. of streaks per event in ohcal
+    std::array<std::size_t, 64> m_ohNumStreak;
+
+    ///! tower info (eta, phi) map
     bbfqd::OHCalMap m_ohMap;
 
-    // no. of streaks per event in ohcal
-    std::array<std::size_t, 64> m_ohNumStreak;
+    ///! configuration
+    Config m_config; 
 
 };  // end StreakSidebandFilter
 

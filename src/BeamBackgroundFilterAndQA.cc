@@ -14,15 +14,19 @@
 // c++ utiilites
 #include <cassert>
 #include <iostream>
+
 // calo base
 #include <calobase/TowerInfoContainer.h>
+
 // f4a libraries
 #include <fun4all/Fun4AllReturnCodes.h>
 #include <fun4all/Fun4AllHistoManager.h>
+
 // phool libraries
 #include <phool/getClass.h>
 #include <phool/phool.h>
 #include <phool/PHCompositeNode.h>
+
 // qa utilities
 #include <qautils/QAHistManagerDef.h>
 
@@ -52,7 +56,7 @@ BeamBackgroundFilterAndQA::BeamBackgroundFilterAndQA(const std::string& name, co
 // ----------------------------------------------------------------------------
 //! Module constructor accepting a configuration
 // ----------------------------------------------------------------------------
-BeamBackgroundFilterAndQA::BeamBackgroundFilterAndQA(const BeamBackgroundFilterAndQAConfig& config) : SubsysReco(config.moduleName)
+BeamBackgroundFilterAndQA::BeamBackgroundFilterAndQA(const Config& config) : SubsysReco(config.moduleName)
 {
 
   // set configuration
@@ -101,13 +105,13 @@ int BeamBackgroundFilterAndQA::Init(PHCompositeNode* topNode)
 
   // initialize relevant filters
   InitFilters();
+  BuildHistograms();
 
   // if needed, initialize histograms + manager
   if (m_config.doQA)
   {
     InitHistManager();
-    BuildHistograms();
-
+    RegisterHistograms();
   }
   return Fun4AllReturnCodes::EVENT_OK;
 
@@ -129,6 +133,7 @@ int BeamBackgroundFilterAndQA::process_event(PHCompositeNode* topNode)
   // check for beam background
   const bool hasBeamBkgd = ApplyFilters(topNode);
 
+  // if it does, abort event
   if (hasBeamBkgd)
   {
     return Fun4AllReturnCodes::ABORTEVENT;
@@ -153,7 +158,7 @@ int BeamBackgroundFilterAndQA::End(PHCompositeNode *topNode)
     std::cout << "BeamBackgroundFilterAndQA::End(PHCompositeNode *topNode) This is the end..." << std::endl;
   }
 
-  /* nothing to do */
+  //... nothing to do ...//
   return Fun4AllReturnCodes::EVENT_OK;
 
 }  // end 'End(PHCompositeNode*)'
@@ -169,15 +174,15 @@ void BeamBackgroundFilterAndQA::InitFilters()
 {
 
   // print debug message
-  if (m_config.debug && (Verbosity() > 0))
+  if (m_config.debug && (Verbosity() > 1))
   {
     std::cout << "BeamBackgroundFilterAndQA::InitFilters() Initializing background filters" << std::endl;
   }
 
-  if (m_config.filters.count("StreakSideband")) {
-    m_sideband = std::make_unique<StreakSidebandFilter>();
-    m_sideband -> SetConfig( m_config.sideband );
-  }
+
+  m_filters["StreakSideband"] = std::make_unique<StreakSidebandFilter>( m_config.sideband );
+  //... other filters added here ...//
+
   return;
 
 }  // end 'InitFilters()'
@@ -220,14 +225,37 @@ void BeamBackgroundFilterAndQA::BuildHistograms()
     std::cout << "BeamBackgroundFilterAndQA::BuildHistograms() Creating histograms" << std::endl;
   }
 
-  // FIXME might make this a little nicer
-  if (m_config.filters.count("StreakSideband"))
+
+  for (const std::string& filterToApply : m_config.filtersToApply)
   {
-    m_sideband->BuildHistograms();
+    m_filters.at(filterToApply)->BuildHistograms();
   }
   return;
 
 }  // end 'BuildHistograms()'
+
+
+
+// ----------------------------------------------------------------------------
+//! Register histograms
+// ----------------------------------------------------------------------------
+void BeamBackgroundFilterAndQA::RegisterHistograms()
+{
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 0))
+  {
+    std::cout << "BeamBackgroundFilterAndQA::RegisterHistograms() Registering histograms w/ manager" << std::endl;
+  }
+
+
+  for (const std::string& filterToApply : m_config.filtersToApply)
+  {
+    m_filters.at(filterToApply)->RegisterHistograms(m_manager);
+  }
+  return;
+
+}  // end 'RegisterHistograms()'
 
 
 
@@ -243,11 +271,10 @@ bool BeamBackgroundFilterAndQA::ApplyFilters(PHCompositeNode* topNode)
     std::cout << "BeamBackgroundFilterAndQA::ApplyFilters(PHCompositeNode*) Creating histograms" << std::endl;
   }
 
-  // apply filters
   bool hasBkgd = false;
-  if (m_config.filters.count("StreakSideband"))
+  for (const std::string& filterToApply : m_config.filtersToApply)
   {
-    hasBkgd += m_sideband->ApplyFilter(topNode);
+    hasBkgd += m_filters.at(filterToApply)->ApplyFilter(topNode);
   }
   return hasBkgd;
 

@@ -15,6 +15,7 @@
 // c++ utiilites
 #include <algorithm>
 #include <iostream>
+
 // calo base
 #include <calobase/TowerInfoContainer.h>
 // phool libraries
@@ -33,9 +34,21 @@
 StreakSidebandFilter::StreakSidebandFilter()
 {
 
-  /* nothing to do */
+  //... nothing to do ...//
 
 }  // end ctor()
+
+
+
+// ----------------------------------------------------------------------------
+//! ctor accepting config struct
+// ----------------------------------------------------------------------------
+StreakSidebandFilter::StreakSidebandFilter(Config& config)
+{
+
+  m_config = config;
+
+}  // end ctor(Config&)
 
 
 
@@ -45,29 +58,22 @@ StreakSidebandFilter::StreakSidebandFilter()
 StreakSidebandFilter::~StreakSidebandFilter()
 {
 
-  /* nothing to do */
+  //... nothing to do ...//
 
-}
+}  // end dtor
 
 
 
 // public methods =============================================================
 
-void StreakSidebandFilter::BuildHistograms(const std::string& tag)
-{
-
-  /* TODO this goes here */
-  return;
-
-}  // end 'BuildHistograms(std::string&)'
-
-
-
+// ----------------------------------------------------------------------------
+// Apply filter to check for beam background or not
+// ----------------------------------------------------------------------------
 bool StreakSidebandFilter::ApplyFilter(PHCompositeNode* topNode)
 {
 
   // print debug message
-  if (m_config.debug && (m_config.verbosity > 0))
+  if (m_config.debug && (m_config.verbosity > 2))
   {
     std::cout << "StreakSidebandFilter::ApplyFilter() Checking if streak found in OHCal via their sidebands" << std::endl;
   }
@@ -121,7 +127,26 @@ bool StreakSidebandFilter::ApplyFilter(PHCompositeNode* topNode)
 
 
 
-// inherited private methods ==================================================
+// ----------------------------------------------------------------------------
+//! Construct histograms
+// ----------------------------------------------------------------------------
+void StreakSidebandFilter::BuildHistograms(const std::string& tag)
+{
+
+  // print debug message
+  if (m_config.debug && (m_config.verbosity > 2))
+  {
+    std::cout << "StreakSidebandFilter::BuildHistograms(std::string) Constructing histograms" << std::endl;
+  }
+
+  /* TODO fill in */
+  return;
+
+}  // end 'BuildHistograms(std::string&)'
+
+
+
+// private methods ============================================================
 
 // ----------------------------------------------------------------------------
 //! Grab input nodes
@@ -130,7 +155,7 @@ void StreakSidebandFilter::GrabNodes(PHCompositeNode* topNode)
 {
 
   // print debug message
-  if (m_config.debug && (m_config.verbosity > 1))
+  if (m_config.debug && (m_config.verbosity > 2))
   {
     std::cout << "StreakSidebandFilter::GrabNodes(PHCompositeNode*) Grabbing input nodes" << std::endl;
   }
@@ -142,8 +167,6 @@ void StreakSidebandFilter::GrabNodes(PHCompositeNode* topNode)
 
 
 
-// filter-specific private methods ============================================
-
 // ----------------------------------------------------------------------------
 //! Check if tower not consistent w/ being in a streak
 // ----------------------------------------------------------------------------
@@ -151,7 +174,7 @@ bool StreakSidebandFilter::IsTowerNotStreaky(const bbfqd::Tower& tower)
 {
 
   // print debug message
-  if (m_config.debug && (m_config.verbosity > 1))
+  if (m_config.debug && (m_config.verbosity > 2))
   {
     std::cout << "StreakSidebandFilter::IsTowerNotStreaky() Checking if tower not consistent w/ streak" << std::endl;
   }
@@ -171,7 +194,7 @@ bool StreakSidebandFilter::IsNeighborNotStreaky(const bbfqd::Tower& tower)
 {
 
   // print debug message
-  if (m_config.debug && (m_config.verbosity > 1))
+  if (m_config.debug && (m_config.verbosity > 2))
   {
     std::cout << "StreakSidebandFilter::IsNeighborNotStreaky() Checking if neighboring tower not consistent w/ streak" << std::endl;
   }

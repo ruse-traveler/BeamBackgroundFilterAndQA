@@ -14,11 +14,14 @@
 
 // c++ utilities
 #include <memory>
-#include <set>
 #include <string>
+#include <vector>
+
 // f4a libraries
 #include <fun4all/SubsysReco.h>
+
 // module components
+#include "BaseBeamBackgroundFilter.h"
 #include "StreakSidebandFilter.h"
 
 // forward declarations
@@ -26,29 +29,6 @@ class Fun4AllHistoManager;
 class PHCompositeNode;
 class QAHistManagerHistDef;
 class TowerInfoContainer;
-
-
-
-// ============================================================================
-//! User options for BeamBackgroundFilterAndQAConfig module
-// ============================================================================
-struct BeamBackgroundFilterAndQAConfig
-{
-
-  // turn modes on/off
-  bool debug = true;
-  bool doQA  = true;
-
-  // module name
-  std::string moduleName = "BeamBackgroundFilterAndQA";
-
-  // which filters to apply
-  std::set<std::string> filters = {"StreakSideband"};
-
-  // filter configurations
-  StreakSidebandFilterConfig sideband;
-
-};
 
 
 
@@ -63,16 +43,37 @@ class BeamBackgroundFilterAndQA : public SubsysReco {
 
   public:
 
+    // ========================================================================
+    //! User options for module
+    // =======================================================================
+    struct Config
+    {
+
+      // turn modes on/off
+      bool debug = true;
+      bool doQA  = true;
+
+      ///! module name
+      std::string moduleName = "BeamBackgroundFilterAndQA";
+
+      ///! which filters to apply
+      std::vector<std::string> filtersToApply = {"StreakSideband"};
+
+      ///! filter configurations
+      StreakSidebandFilter::Config sideband;
+
+    };
+
     // ctor/dtor
     BeamBackgroundFilterAndQA(const std::string& name = "BeamBackgroundFilterAndQA", const bool debug = false);
-    BeamBackgroundFilterAndQA(const BeamBackgroundFilterAndQAConfig& config); 
+    BeamBackgroundFilterAndQA(const Config& config); 
     ~BeamBackgroundFilterAndQA() override;
 
     // setters
-    void SetConfig(const BeamBackgroundFilterAndQAConfig& config) {m_config = config;}
+    void SetConfig(const Config& config) {m_config = config;}
 
     // getters
-    BeamBackgroundFilterAndQAConfig GetConfig() const {return m_config;}
+    Config GetConfig() const {return m_config;}
 
     // f4a methods
     int Init(PHCompositeNode* topNode) override;
@@ -85,16 +86,17 @@ class BeamBackgroundFilterAndQA : public SubsysReco {
     void InitFilters();
     void InitHistManager();
     void BuildHistograms();
+    void RegisterHistograms();
     bool ApplyFilters(PHCompositeNode* topNode);
 
-    // module configuration
-    BeamBackgroundFilterAndQAConfig m_config;
-
-    // filters
-    std::unique_ptr<StreakSidebandFilter> m_sideband;
-
-    // f4a members
+    ///! histogram manager
     Fun4AllHistoManager* m_manager = NULL;
+
+    ///! module configuration
+    Config m_config;
+
+    ///! filters
+    std::map<std::string, std::unique_ptr<BaseBeamBackgroundFilter>> m_filters;
 
 };  // end BeamBackgroundFilterAndQA
 

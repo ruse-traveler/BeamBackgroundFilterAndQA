@@ -9,12 +9,19 @@
  */
 /// ===========================================================================
 
-#ifndef BEAMBACKGROUNDFILTER_H
-#define BEAMBACKGROUNDFILTER_H
+#ifndef BASEBEAMBACKGROUNDFILTER_H
+#define BASEBEAMBACKGROUNDFILTER_H
 
 // c++ utilities
 #include <map>
 #include <string>
+
+// root libraries
+#include <TH1.h>
+
+// f4a libraries
+#include <fun4all/Fun4AllReturnCodes.h>
+#include <fun4all/Fun4AllHistoManager.h>
 
 // forward declarations
 class PHCompositeNode;
@@ -22,17 +29,12 @@ class PHCompositeNode;
 
 
 // ============================================================================
-//! Abstract base filter 
+//! Base beam background filter 
 // ============================================================================
-/*! An abstract template for filters to be applied in the
- *  BeamBackgroundFilterAndQA module. Defines all the
- *  machinery common between filters.
- *
- *  Derived filters need to define the following by
- *  overwriting the appropriate method:
- *    - <METHOD 1>
+/*! Base class for filters to be applied in the BeamBackgroundFilterAndQA
+ *  module. Defines all the machinery common between filters.
  */
-template <typename Config> class BaseBeamBackgroundFilter
+class BaseBeamBackgroundFilter
 {
 
   protected:
@@ -40,38 +42,55 @@ template <typename Config> class BaseBeamBackgroundFilter
     // ------------------------------------------------------------------------
     //! Grab relevant input nodes
     // ------------------------------------------------------------------------
-    /*! This <GRABS THE INPUT>
+    /*! Collects all calls to `findNode`.
+     */ 
+    virtual void GrabNodes(PHCompositeNode* topNode) {return;}
+
+    // ------------------------------------------------------------------------
+    //! Histograms
+    // ------------------------------------------------------------------------
+    /*! All QA histograms for a given filter should be defined in this
+     *  map, e.g.
+     *
+     *  m_hists["hNStreakPhi"] = new TH2D("hNStreakPhi", "", 64, 0., 64., 10, 0., 10.);
      */
-    virtual void GrabNodes(PHCompositeNode* topNode) = 0;
+    std::map<std::string, TH1*> m_hists;
 
-    ///! filter configuration
-    Config m_config;
-
-    /* TODO add histogram map(s) */
+    ///! filter name
+    std::string m_name;
 
   public:
 
     // ------------------------------------------------------------------------
-    //! Build associated histograms
-    // ------------------------------------------------------------------------
-    /*! This <MAKES THE HISTOGRAMS>
-     */
-    virtual void BuildHistograms(const std::string& tag) = 0;
-
-    // ------------------------------------------------------------------------
     //! Apply filter
     // ------------------------------------------------------------------------
-    /*! This <DOES THE THING>
+    /*! Applies the filter. Should return true if filter finds beam
+     *  background, and false if not.
+     */
+    virtual bool ApplyFilter(PHCompositeNode* topNode) {return false;}
+
+    // ------------------------------------------------------------------------
+    //! Build associated histograms
+    // ------------------------------------------------------------------------
+    /*! Collects all definitions of histograms.
      */ 
-    virtual bool ApplyFilter(PHCompositeNode* topNode) = 0;
+    virtual void BuildHistograms(const std::string& tag = "") {return;}
 
-    /* TODO add method to register histograms */
+    ///! register histograms
+    inline void RegisterHistograms(Fun4AllHistoManager* manager)
+    {
+      for (auto& hist : m_hists)
+      {
+        manager->registerHisto( hist.second );
+      }
+      return;
+    }
 
-    ///! Set filter configuration
-    inline void SetConfig(const Config& config) {m_config = config;}
+    ///! Set filter name
+    void SetName(const std::string& name) {m_name = name;}
 
-    ///! Get filter configuration
-    inline Config GetConfig() const {return m_config;}
+    ///! Get filter name
+    std::string GetName(const std::string& name) {return m_name;}
 
     ///! default ctor/dtor
     BaseBeamBackgroundFilter()  {};
