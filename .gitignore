@@ -1,7 +1,10 @@
 ref/
+todo/
+output/
 src/*
 !src/*.cc
 !src/*.h
 !src/autogen.sh
 !src/Makefile.am
 !src/configure.ac
+!src/sphx-build

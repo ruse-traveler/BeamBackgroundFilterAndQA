@@ -13,12 +13,16 @@
 #define BEAMBACKGROUNDFILTERANDQA_H
 
 // c++ utilities
-#include <array>
+#include <memory>
 #include <string>
+#include <vector>
+
 // f4a libraries
 #include <fun4all/SubsysReco.h>
-// calo base
-#include <calobase/TowerInfo.h>
+
+// module components
+#include "BaseBeamBackgroundFilter.h"
+#include "StreakSidebandFilter.h"
 
 // forward declarations
 class Fun4AllHistoManager;
@@ -40,90 +44,59 @@ class BeamBackgroundFilterAndQA : public SubsysReco {
   public:
 
     // ========================================================================
-    //! User options for BeamBackgroundFilterAndQAConfig module
-    // ========================================================================
+    //! User options for module
+    // =======================================================================
     struct Config
     {
 
-      // turn debug on/off
+      // turn modes on/off
       bool debug = true;
+      bool doQA  = true;
 
-      // input node & module name
-      std::string inNodeName = "TOWERINFO_CALIB_HCALOUT";
+      ///! module name
       std::string moduleName = "BeamBackgroundFilterAndQA";
 
-      // ohcal streak algorithm parameters
-      float    minStreakTwrEne    = 0.6;
-      float    maxAdjacentTwrEne  = 0.06;
-      uint32_t minNumTwrsInStreak = 5;
+      ///! which filters to apply
+      std::vector<std::string> filtersToApply = {"StreakSideband"};
+
+      ///! filter configurations
+      StreakSidebandFilter::Config sideband;
 
     };
 
-    // ========================================================================
-    //! Convenience struct to hold info from TowerInfo
-    // ========================================================================
-    struct Tower
-    {
-
-      uint8_t status = 0;
-      double  energy = -1.;
-
-      // grab info from a TowerInfo object
-      void SetInfo(TowerInfo* info)
-      {
-        status = info->get_status();
-        energy = info->get_energy();
-      }
-
-      // reset values
-      void Reset()
-      {
-        status = 0;
-        energy = -1.;
-      }
-    };
-
-    // ctor
-    BeamBackgroundFilterAndQA(const std::string& name = "BeamBackgroundFilterAndQA");
+    // ctor/dtor
+    BeamBackgroundFilterAndQA(const std::string& name = "BeamBackgroundFilterAndQA", const bool debug = false);
+    BeamBackgroundFilterAndQA(const Config& config); 
     ~BeamBackgroundFilterAndQA() override;
 
     // setters
     void SetConfig(const Config& config) {m_config = config;}
 
     // getters
-    Config GetConfig() {return m_config;}
+    Config GetConfig() const {return m_config;}
 
     // f4a methods
-    int Init(PHCompositeNode* topNode)          override;
+    int Init(PHCompositeNode* topNode) override;
     int process_event(PHCompositeNode* topNode) override;
-    int End(PHCompositeNode* topNode)           override;
+    int End(PHCompositeNode* topNode) override;
 
   private:
 
     // private methods
-    bool HasStreakInOHCal();
-    bool IsTowerNotStreaky(const Tower& tower);
-    bool IsNeighborNotStreaky(const Tower& tower);
-    void ResetTowerArrays();
-    void BuildTowerArray();
-    void BuildHistograms();
+    void InitFilters();
     void InitHistManager();
-    void GrabNodes(PHCompositeNode* topNode);
+    void BuildHistograms();
+    void RegisterHistograms();
+    bool ApplyFilters(PHCompositeNode* topNode);
 
-    // module configuration
+    ///! histogram manager
+    Fun4AllHistoManager* m_manager = NULL;
+
+    ///! module configuration
     Config m_config;
 
-    // tower info (eta, phi> map
-    //   - n.b. reminder that there are 64 hcal towers in phi
-    //     and 24 hcal towers in eta
-    std::array<std::array<Tower, 64>, 24> m_ohTwrArray;
-    std::array<std::size_t, 64>           m_ohNumStreak;
-
-    // f4a members
-    Fun4AllHistoManager* m_manager     = NULL;
-    TowerInfoContainer*  m_ohcalTowers = NULL;
-
-    /* TODO add histograms */
+    ///! filters
+    std::map<std::string, std::unique_ptr<BaseBeamBackgroundFilter>> m_filters;
 
 };  // end BeamBackgroundFilterAndQA
 

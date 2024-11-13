@@ -13,6 +13,7 @@
 #include <string>
 
 // f4a libraries
+#include <beambackgroundfilterandqa/StreakSidebandFilter.h>
 #include <beambackgroundfilterandqa/BeamBackgroundFilterAndQA.h>
 #include <ffamodules/CDBInterface.h>
 #include <ffamodules/FlagHandler.h>
@@ -43,9 +44,20 @@ void Fun4All_TestBeamBackgroundFilterAndQA(
 
   // options ------------------------------------------------------------------
 
-  // trigger cluster maker options
+  // options for streak sideband algorithm
+  StreakSidebandFilter::Config cfg_sideband {
+    .debug = true,
+    .minStreakTwrEne = 0.6,
+    .maxAdjacentTwrEne = 0.06,
+    .minNumTwrsInStreak = 5,
+    .verbosity = verbosity
+  };
+
+  // options for entire modle
   BeamBackgroundFilterAndQA::Config cfg_filter {
-    .debug = true
+    .debug = true,
+    .doQA = true,
+    .sideband = cfg_sideband
   };
 
   // initialize f4a -----------------------------------------------------------
