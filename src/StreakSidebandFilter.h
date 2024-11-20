@@ -16,6 +16,7 @@
 // c++ utilities
 #include <array>
 #include <string>
+
 // module components
 #include "BaseBeamBackgroundFilter.h"
 #include "BeamBackgroundFilterAndQADefs.h"
@@ -55,13 +56,13 @@ class StreakSidebandFilter : public BaseBeamBackgroundFilter
     };
 
     // ctor/dtor
-    StreakSidebandFilter();
-    StreakSidebandFilter(Config& cfg);
+    StreakSidebandFilter(const std::string& name = "StreakSideband");
+    StreakSidebandFilter(const Config& cfg, const std::string& name = "StreakSideband");
     ~StreakSidebandFilter();
 
     // inherited methods
     bool ApplyFilter(PHCompositeNode* topNode) override;
-    void BuildHistograms(const std::string& tag = "") override;
+    void BuildHistograms(const std::string& module, const std::string& tag = "") override;
 
   private:
 

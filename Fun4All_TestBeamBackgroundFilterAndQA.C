@@ -13,8 +13,9 @@
 #include <string>
 
 // f4a libraries
-#include <beambackgroundfilterandqa/StreakSidebandFilter.h>
 #include <beambackgroundfilterandqa/BeamBackgroundFilterAndQA.h>
+#include <beambackgroundfilterandqa/NullFilter.h>
+#include <beambackgroundfilterandqa/StreakSidebandFilter.h>
 #include <ffamodules/CDBInterface.h>
 #include <ffamodules/FlagHandler.h>
 #include <FROG.h>
@@ -44,6 +45,12 @@ void Fun4All_TestBeamBackgroundFilterAndQA(
 
   // options ------------------------------------------------------------------
 
+  // options for null (template) algorithm
+  NullFilter::Config cfg_null {
+    .debug = true,
+    .verbosity = verbosity
+  };
+
   // options for streak sideband algorithm
   StreakSidebandFilter::Config cfg_sideband {
     .debug = true,
@@ -57,6 +64,7 @@ void Fun4All_TestBeamBackgroundFilterAndQA(
   BeamBackgroundFilterAndQA::Config cfg_filter {
     .debug = true,
     .doQA = true,
+    .doEvtAbort = false,
     .sideband = cfg_sideband
   };
 
@@ -95,7 +103,9 @@ void Fun4All_TestBeamBackgroundFilterAndQA(
   f4a -> End();
 
   // save qa output and exit
-  QAHistManagerDef::saveQARootFile(outFile);
+  if (cfg_filter.doQA) {
+    QAHistManagerDef::saveQARootFile(outFile);
+  }
   delete f4a;
 
   // close and  exit

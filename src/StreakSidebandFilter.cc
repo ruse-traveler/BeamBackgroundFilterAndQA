@@ -10,7 +10,7 @@
  */
 /// ===========================================================================
 
-#define STREAKSIDEBANDFILTER_cc
+#define STREAKSIDEBANDFILTER_CC
 
 // c++ utiilites
 #include <algorithm>
@@ -18,9 +18,15 @@
 
 // calo base
 #include <calobase/TowerInfoContainer.h>
+
 // phool libraries
 #include <phool/getClass.h>
 #include <phool/PHCompositeNode.h>
+
+// root libraries
+#include <TH1.h>
+#include <TH2.h>
+
 // module components
 #include "StreakSidebandFilter.h"
 
@@ -31,10 +37,10 @@
 // ----------------------------------------------------------------------------
 //! Default ctor
 // ----------------------------------------------------------------------------
-StreakSidebandFilter::StreakSidebandFilter()
+StreakSidebandFilter::StreakSidebandFilter(const std::string& name)
 {
 
-  //... nothing to do ...//
+  m_name = name;
 
 }  // end ctor()
 
@@ -43,10 +49,11 @@ StreakSidebandFilter::StreakSidebandFilter()
 // ----------------------------------------------------------------------------
 //! ctor accepting config struct
 // ----------------------------------------------------------------------------
-StreakSidebandFilter::StreakSidebandFilter(Config& config)
+StreakSidebandFilter::StreakSidebandFilter(const Config& config, const std::string& name)
 {
 
   m_config = config;
+  m_name   = name;
 
 }  // end ctor(Config&)
 
@@ -112,13 +119,22 @@ bool StreakSidebandFilter::ApplyFilter(PHCompositeNode* topNode)
       if (isUpNotStreak || isDownNotStreak) continue;
 
       // finally, increment no. of streaky towers for this phi
+      // and this phi + 1
       ++m_ohNumStreak[iPhi];
+      ++m_ohNumStreak[iUp];
+
+      // fill histograms
+      m_hists["nstreakperphi"]->Fill(iPhi);
+      m_hists["nstreakperphi"]->Fill(iPhi);
+      m_hists["nstreaktwretavsphi"]->Fill(iEta, iPhi);
+      m_hists["nstreaktwretavsphi"]->Fill(iEta, iUp);
 
     }  // end eta loop
   }  // end phi loop
 
   // now find longest streak
   const uint32_t nMaxStreak = *std::max_element(m_ohNumStreak.begin(), m_ohNumStreak.end());
+  m_hists["nmaxstreak"]->Fill(nMaxStreak);
 
   // return if streak length above threshold
   return (nMaxStreak > m_config.minNumTwrsInStreak);
@@ -130,7 +146,7 @@ bool StreakSidebandFilter::ApplyFilter(PHCompositeNode* topNode)
 // ----------------------------------------------------------------------------
 //! Construct histograms
 // ----------------------------------------------------------------------------
-void StreakSidebandFilter::BuildHistograms(const std::string& tag)
+void StreakSidebandFilter::BuildHistograms(const std::string& module, const std::string& tag)
 {
 
   // print debug message
@@ -139,10 +155,29 @@ void StreakSidebandFilter::BuildHistograms(const std::string& tag)
     std::cout << "StreakSidebandFilter::BuildHistograms(std::string) Constructing histograms" << std::endl;
   }
 
-  /* TODO fill in */
+  // make sure module name is lower case
+  std::string moduleAndFilterName = module + "_" + m_name;
+
+  // names of variables to be histogramed
+  const std::vector<std::string> varNames = {
+    "nmaxstreak",
+    "nstreakperphi",
+    "nstreaktwretavsphi"
+  };
+
+  // make qa-compliant hist names
+  std::vector<std::string> histNames = bbfqd::MakeQAHistNames(varNames, moduleAndFilterName, tag);
+
+  // construct histograms
+  //   - n.b. reminder that there are
+  //       24 ohcal towers in eta
+  //       64 ohcal towers in phi
+  m_hists[varNames[0]] = new TH1D(histNames[0].data(), "", 25, -0.5, 24.5);
+  m_hists[varNames[1]] = new TH1D(histNames[1].data(), "", 65, -0.5, 64.5);
+  m_hists[varNames[2]] = new TH2D(histNames[2].data(), "", 25, -0.5, 24.5, 65, -0.5, 64.5);
   return;
 
-}  // end 'BuildHistograms(std::string&)'
+}  // end 'BuildHistograms(std::string&, std::string&)'
 
 
 
