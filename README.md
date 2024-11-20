@@ -11,9 +11,9 @@ can be added with relatively minimal overhead.
 
 There are currently two filters:
 
-  - *`The Null Filter,`* which does nothing, but provides a template
+  - **`The Null Filter,`** which does nothing, but provides a template
     for other other filters; and
-  - *`The Streak Sideband Filter,`* which checks for cases in the
+  - **`The Streak Sideband Filter,`** which checks for cases in the
     OHCal where you have a continuous row of towers along eta above
     some threshold in energy.
 
@@ -55,14 +55,14 @@ void MyModule::process_event(PHCompositeNode* topNode) {
 
 The code is structured like so:
 
-  - *`BaseBeamBackgroundFilter.h:`* A base class for all filters to
+  - **`BaseBeamBackgroundFilter.h:`** A base class for all filters to
     be applied, consolidates common functionality across filters. New
     filters must inherit from this.
-  - *`{Null,StreakSideband}Filter.{cc,h}`:* The actual filters to
+  - **`{Null,StreakSideband}Filter.{cc,h}`:** The actual filters to
     be applied.
-  - *`BeamBackgroundFilterAndQA.{cc,h}`:* The actual F4A module
+  - **`BeamBackgroundFilterAndQA.{cc,h}`:** The actual F4A module
     which organizes and runs all of the specified filters.
-  - ***`BeamBackgroundFilterAndQADefs.h`:*** A namespace to collect
+  - **`BeamBackgroundFilterAndQADefs.h`:** A namespace to collect
     a variety of useful methods used throughout the module and its
     componenets.
 
