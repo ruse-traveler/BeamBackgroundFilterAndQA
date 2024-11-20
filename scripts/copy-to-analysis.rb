@@ -17,6 +17,7 @@ copy_to   = "/sphenix/user/danderson/sphenix/analysis/JS-Jet/BeamBackgroundFilte
 
 # what files to copy
 to_copy = [
+  "README.md",
   "Fun4All_TestBeamBackgroundFilterAndQA.C",
   "scripts/copy-to-analysis.rb",
   "src/BaseBeamBackgroundFilter.h",
