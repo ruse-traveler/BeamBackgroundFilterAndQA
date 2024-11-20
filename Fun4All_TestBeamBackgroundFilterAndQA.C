@@ -57,6 +57,7 @@ void Fun4All_TestBeamBackgroundFilterAndQA(
   BeamBackgroundFilterAndQA::Config cfg_filter {
     .debug = true,
     .doQA = true,
+    .doEvtAbort = false,
     .sideband = cfg_sideband
   };
 

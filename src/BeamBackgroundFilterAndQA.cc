@@ -134,7 +134,7 @@ int BeamBackgroundFilterAndQA::process_event(PHCompositeNode* topNode)
   const bool hasBeamBkgd = ApplyFilters(topNode);
 
   // if it does, abort event
-  if (hasBeamBkgd)
+  if (hasBeamBkgd && m_config.doEvtAbort)
   {
     return Fun4AllReturnCodes::ABORTEVENT;
   }

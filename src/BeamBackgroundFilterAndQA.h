@@ -50,8 +50,9 @@ class BeamBackgroundFilterAndQA : public SubsysReco {
     {
 
       // turn modes on/off
-      bool debug = true;
-      bool doQA  = true;
+      bool debug      = true;
+      bool doQA       = true;
+      bool doEvtAbort = false;
 
       ///! module name
       std::string moduleName = "BeamBackgroundFilterAndQA";
