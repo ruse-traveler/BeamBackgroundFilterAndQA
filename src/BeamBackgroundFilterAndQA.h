@@ -13,6 +13,7 @@
 #define BEAMBACKGROUNDFILTERANDQA_H
 
 // c++ utilities
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -57,6 +58,9 @@ class BeamBackgroundFilterAndQA : public SubsysReco {
       ///! module name
       std::string moduleName = "BeamBackgroundFilterAndQA";
 
+      ///! histogram tags
+      std::string histTag = "";
+
       ///! which filters to apply
       std::vector<std::string> filtersToApply = {"StreakSideband"};
 
@@ -92,6 +96,9 @@ class BeamBackgroundFilterAndQA : public SubsysReco {
 
     ///! histogram manager
     Fun4AllHistoManager* m_manager = NULL;
+
+    ///! module-wide histograms
+    std::map<std::string, TH1*> m_hists;
 
     ///! module configuration
     Config m_config;

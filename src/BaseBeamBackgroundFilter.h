@@ -74,7 +74,7 @@ class BaseBeamBackgroundFilter
     // ------------------------------------------------------------------------
     /*! Collects all definitions of histograms.
      */ 
-    virtual void BuildHistograms(const std::string& tag = "") {return;}
+    virtual void BuildHistograms(const std::string& module, const std::string& tag = "") {return;}
 
     ///! register histograms
     inline void RegisterHistograms(Fun4AllHistoManager* manager)

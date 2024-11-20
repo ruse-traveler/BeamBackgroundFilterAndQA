@@ -30,8 +30,15 @@
 // qa utilities
 #include <qautils/QAHistManagerDef.h>
 
-// module definition
+// root libraries
+#include <TH1.h>
+
+// module components
 #include "BeamBackgroundFilterAndQA.h"
+#include "BeamBackgroundFilterAndQADefs.h"
+
+// alias for convenience
+namespace bbfqd = BeamBackgroundFilterAndQADefs;
 
 
 
@@ -180,7 +187,7 @@ void BeamBackgroundFilterAndQA::InitFilters()
   }
 
 
-  m_filters["StreakSideband"] = std::make_unique<StreakSidebandFilter>( m_config.sideband );
+  m_filters["StreakSideband"] = std::make_unique<StreakSidebandFilter>( m_config.sideband, "StreakSideband" );
   //... other filters added here ...//
 
   return;
@@ -225,10 +232,29 @@ void BeamBackgroundFilterAndQA::BuildHistograms()
     std::cout << "BeamBackgroundFilterAndQA::BuildHistograms() Creating histograms" << std::endl;
   }
 
-
+  // construct module-wide variable names
+  std::vector<std::string> varNames = {"nevts_overall"};
   for (const std::string& filterToApply : m_config.filtersToApply)
   {
-    m_filters.at(filterToApply)->BuildHistograms();
+    varNames.push_back("nevts_" + filterToApply);
+  }
+
+  // get module-wide histogram names
+  std::vector<std::string> histNames = bbfqd::MakeQAHistNames(varNames, m_config.moduleName, m_config.histTag);
+
+  // create module-wide histograms
+  for (std::size_t iVar = 0; iVar < varNames.size(); ++iVar)
+  {
+    m_hists[varNames[iVar]] = new TH1D(histNames[iVar].data(), "", 3, -0.5, 2.5);
+    m_hists[varNames[iVar]]->GetXaxis()->SetBinLabel(1, "All");
+    m_hists[varNames[iVar]]->GetXaxis()->SetBinLabel(2, "No beam bkgd.");
+    m_hists[varNames[iVar]]->GetXaxis()->SetBinLabel(3, "Beam bkgd.");
+  }
+
+  // build filter-specific histograms
+  for (const std::string& filterToApply : m_config.filtersToApply)
+  {
+    m_filters.at(filterToApply)->BuildHistograms(m_config.moduleName, m_config.histTag);
   }
   return;
 
@@ -248,7 +274,13 @@ void BeamBackgroundFilterAndQA::RegisterHistograms()
     std::cout << "BeamBackgroundFilterAndQA::RegisterHistograms() Registering histograms w/ manager" << std::endl;
   }
 
+  // register module-wide histograms
+  for (auto& hist : m_hists)
+  {
+    m_manager->registerHisto( hist.second );
+  }
 
+  // register filter-specific histograms
   for (const std::string& filterToApply : m_config.filtersToApply)
   {
     m_filters.at(filterToApply)->RegisterHistograms(m_manager);
@@ -274,7 +306,28 @@ bool BeamBackgroundFilterAndQA::ApplyFilters(PHCompositeNode* topNode)
   bool hasBkgd = false;
   for (const std::string& filterToApply : m_config.filtersToApply)
   {
-    hasBkgd += m_filters.at(filterToApply)->ApplyFilter(topNode);
+    const bool filterFoundBkgd = m_filters.at(filterToApply)->ApplyFilter(topNode);
+    if (filterFoundBkgd)
+    {
+      m_hists["nevts_" + filterToApply]->Fill(bbfqd::Status::HasBkgd);
+    }
+    else
+    {
+      m_hists["nevts_" + filterToApply]->Fill(bbfqd::Status::NoBkgd);
+    }
+    m_hists["nevts_" + filterToApply]->Fill(bbfqd::Status::Evt);
+    hasBkgd += filterFoundBkgd;
+  }
+
+  // fill overall histograms and return
+  m_hists["nevts_overall"]->Fill(bbfqd::Status::Evt);
+  if (hasBkgd)
+  {
+    m_hists["nevts_overall"]->Fill(bbfqd::Status::HasBkgd);
+  }
+  else
+  {
+    m_hists["nevts_overall"]->Fill(bbfqd::Status::NoBkgd);
   }
   return hasBkgd;
 

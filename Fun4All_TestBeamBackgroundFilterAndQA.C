@@ -96,7 +96,9 @@ void Fun4All_TestBeamBackgroundFilterAndQA(
   f4a -> End();
 
   // save qa output and exit
-  QAHistManagerDef::saveQARootFile(outFile);
+  if (cfg_filter.doQA) {
+    QAHistManagerDef::saveQARootFile(outFile);
+  }
   delete f4a;
 
   // close and  exit
