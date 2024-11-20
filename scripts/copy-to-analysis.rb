@@ -24,6 +24,8 @@ to_copy = [
   "src/BeamBackgroundFilterAndQA.h",
   "src/BeamBackgroundFilterAndQADefs.h",
   "src/BeamBackgroundFilterAndQALinkDef.h",
+  "src/NullFilter.cc",
+  "src/NullFilter.h",
   "src/StreakSidebandFilter.cc",
   "src/StreakSidebandFilter.h",
   "src/autogen.sh",

@@ -186,7 +186,7 @@ void BeamBackgroundFilterAndQA::InitFilters()
     std::cout << "BeamBackgroundFilterAndQA::InitFilters() Initializing background filters" << std::endl;
   }
 
-
+  m_filters["Null"] = std::make_unique<NullFilter>( m_config.null );
   m_filters["StreakSideband"] = std::make_unique<StreakSidebandFilter>( m_config.sideband, "StreakSideband" );
   //... other filters added here ...//
 

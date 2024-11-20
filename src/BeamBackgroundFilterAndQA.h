@@ -23,6 +23,7 @@
 
 // module components
 #include "BaseBeamBackgroundFilter.h"
+#include "NullFilter.h"
 #include "StreakSidebandFilter.h"
 
 // forward declarations
@@ -62,10 +63,12 @@ class BeamBackgroundFilterAndQA : public SubsysReco {
       std::string histTag = "";
 
       ///! which filters to apply
-      std::vector<std::string> filtersToApply = {"StreakSideband"};
+      std::vector<std::string> filtersToApply = {"Null", "StreakSideband"};
 
       ///! filter configurations
+      NullFilter::Config null;
       StreakSidebandFilter::Config sideband;
+      //... add other configurations here ...//
 
     };
 

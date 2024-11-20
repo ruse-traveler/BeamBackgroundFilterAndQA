@@ -32,10 +32,10 @@ namespace BeamBackgroundFilterAndQADefs {
   // ==========================================================================
   /*! This enumerates the outcomes of applying a filter:
    *    Evt     = null, no filter applied yet
-   *    HasBkgd = filter finds there is beam background
    *    NoBkgd  = filter finds there is no beam background
+   *    HasBkgd = filter finds there is beam background
    */
-  enum Status {Evt, HasBkgd, NoBkgd};
+  enum Status {Evt, NoBkgd, HasBkgd};
 
 
 
