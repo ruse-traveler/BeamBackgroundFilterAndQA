@@ -112,7 +112,9 @@ bool StreakSidebandFilter::ApplyFilter(PHCompositeNode* topNode)
       if (isUpNotStreak || isDownNotStreak) continue;
 
       // finally, increment no. of streaky towers for this phi
+      // and this phi + 1
       ++m_ohNumStreak[iPhi];
+      ++m_ohNumStreak[iUp];
 
     }  // end eta loop
   }  // end phi loop
