@@ -98,7 +98,7 @@ class BeamBackgroundFilterAndQA : public SubsysReco {
     bool ApplyFilters(PHCompositeNode* topNode);
 
     ///! histogram manager
-    Fun4AllHistoManager* m_manager = NULL;
+    Fun4AllHistoManager* m_manager;
 
     ///! module-wide histograms
     std::map<std::string, TH1*> m_hists;

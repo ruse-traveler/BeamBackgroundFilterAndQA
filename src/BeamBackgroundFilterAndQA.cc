@@ -47,7 +47,8 @@ namespace bbfqd = BeamBackgroundFilterAndQADefs;
 // ----------------------------------------------------------------------------
 //! Default module constructor
 // ----------------------------------------------------------------------------
-BeamBackgroundFilterAndQA::BeamBackgroundFilterAndQA(const std::string& name, const bool debug) : SubsysReco(name)
+BeamBackgroundFilterAndQA::BeamBackgroundFilterAndQA(const std::string& name, const bool debug)
+  : SubsysReco(name)
 {
 
   // print debug message
@@ -63,11 +64,11 @@ BeamBackgroundFilterAndQA::BeamBackgroundFilterAndQA(const std::string& name, co
 // ----------------------------------------------------------------------------
 //! Module constructor accepting a configuration
 // ----------------------------------------------------------------------------
-BeamBackgroundFilterAndQA::BeamBackgroundFilterAndQA(const Config& config) : SubsysReco(config.moduleName)
+BeamBackgroundFilterAndQA::BeamBackgroundFilterAndQA(const Config& config)
+  : SubsysReco(config.moduleName)
+  , m_manager(nullptr)
+  , m_config(config)
 {
-
-  // set configuration
-  m_config = config;
 
   // print debug message
   if (m_config.debug && (Verbosity() > 0))
