@@ -21,11 +21,13 @@
 // f4a libraries
 #include <fun4all/Fun4AllReturnCodes.h>
 #include <fun4all/Fun4AllHistoManager.h>
+#include <ffaobjects/FlagSavev1.h>
 
 // phool libraries
 #include <phool/getClass.h>
 #include <phool/phool.h>
 #include <phool/PHCompositeNode.h>
+#include <phool/recoConsts.h>
 
 // qa utilities
 #include <qautils/QAHistManagerDef.h>
@@ -67,6 +69,7 @@ BeamBackgroundFilterAndQA::BeamBackgroundFilterAndQA(const std::string& name, co
 BeamBackgroundFilterAndQA::BeamBackgroundFilterAndQA(const Config& config)
   : SubsysReco(config.moduleName)
   , m_manager(nullptr)
+  , m_consts(nullptr)
   , m_config(config)
 {
 
@@ -111,8 +114,9 @@ int BeamBackgroundFilterAndQA::Init(PHCompositeNode* /*topNode*/)
     std::cout << "BeamBackgroundFilterAndQA::Init(PHCompositeNode *topNode) Initializing" << std::endl;
   }
 
-  // initialize relevant filters
+  // initialize relevant filters, histograms
   InitFilters();
+  InitFlags();
   BuildHistograms();
 
   // if needed, initialize histograms + manager
@@ -140,6 +144,12 @@ int BeamBackgroundFilterAndQA::process_event(PHCompositeNode* topNode)
 
   // check for beam background
   const bool hasBeamBkgd = ApplyFilters(topNode);
+
+  // if debugging, print out flags
+  if (m_config.debug)
+  {
+    m_consts->PrintIntFlags();
+  }
 
   // if it does, abort event
   if (hasBeamBkgd && m_config.doEvtAbort)
@@ -187,13 +197,36 @@ void BeamBackgroundFilterAndQA::InitFilters()
     std::cout << "BeamBackgroundFilterAndQA::InitFilters() Initializing background filters" << std::endl;
   }
 
-  m_filters["Null"] = std::make_unique<NullFilter>( m_config.null );
+  m_filters["Null"] = std::make_unique<NullFilter>( m_config.null, "Null" );
   m_filters["StreakSideband"] = std::make_unique<StreakSidebandFilter>( m_config.sideband, "StreakSideband" );
   //... other filters added here ...//
-
   return;
 
 }  // end 'InitFilters()'
+
+
+
+// ----------------------------------------------------------------------------
+//! Initialize flags
+// ----------------------------------------------------------------------------
+void BeamBackgroundFilterAndQA::InitFlags()
+{
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 1))
+  {
+    std::cout << "BeamBackgroundFilterAndQA::InitFlags() Initializing reco consts and flags" << std::endl;
+  }
+
+  m_consts = recoConsts::instance();
+  for (const std::string& filterToApply : m_config.filtersToApply)
+  {
+    m_consts->set_IntFlag("HasBeamBackground_" + filterToApply + "Filter", 0);
+  }
+  m_consts->set_IntFlag("HasBeamBackground", 0);
+  return;
+
+}  // end 'InitFlags()'
 
 
 
@@ -304,6 +337,7 @@ bool BeamBackgroundFilterAndQA::ApplyFilters(PHCompositeNode* topNode)
     std::cout << "BeamBackgroundFilterAndQA::ApplyFilters(PHCompositeNode*) Creating histograms" << std::endl;
   }
 
+  // apply individual filters 
   bool hasBkgd = false;
   for (const std::string& filterToApply : m_config.filtersToApply)
   {
@@ -311,6 +345,7 @@ bool BeamBackgroundFilterAndQA::ApplyFilters(PHCompositeNode* topNode)
     if (filterFoundBkgd)
     {
       m_hists["nevts_" + filterToApply]->Fill(bbfqd::Status::HasBkgd);
+      m_consts->set_IntFlag("HasBeamBackground_" + filterToApply + "Filter", 1);
     }
     else
     {
@@ -325,6 +360,7 @@ bool BeamBackgroundFilterAndQA::ApplyFilters(PHCompositeNode* topNode)
   if (hasBkgd)
   {
     m_hists["nevts_overall"]->Fill(bbfqd::Status::HasBkgd);
+    m_consts->set_IntFlag("HasBeamBackground", 1);
   }
   else
   {
