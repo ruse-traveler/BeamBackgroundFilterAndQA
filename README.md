@@ -1,5 +1,8 @@
 # Beam Background Filter and QA
 
+**NOTE:** this is a public archive. This module is now a part of
+[`sPHENIX-Collaboration/coresoftware`](https://github.com/sPHENIX-Collaboration/coresoftware).
+
 ### Authors:
 Hanpu Jiang, Derek Anderson, Noah Applegate
 
